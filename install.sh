@@ -1,8 +1,8 @@
 #!/bin/sh
-# GPU Watchman installer. Host this file at https://rest.yshubham.com/gpu/install.sh.
+# GPU Watchman installer, served at https://tools.yshubham.com/watchman/install.sh.
 set -eu
 
-BASE_URL=${GPU_WATCHMAN_BASE_URL:-https://rest.yshubham.com/gpu}
+BASE_URL=${GPU_WATCHMAN_BASE_URL:-https://tools.yshubham.com/watchman}
 VERSION=${GPU_WATCHMAN_VERSION:-v0.2.0}
 INSTALL_DIR=${GPU_WATCHMAN_INSTALL_DIR:-/usr/local/bin}
 

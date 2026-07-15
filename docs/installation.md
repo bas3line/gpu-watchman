@@ -29,7 +29,7 @@ gpu-watchman version
 When release artifacts are hosted, install with:
 
 ```sh
-curl -fsSL https://rest.yshubham.com/gpu/install.sh | sh
+curl -fsSL https://tools.yshubham.com/watchman/install.sh | sh
 ```
 
 The installer downloads `gpu-watchman_<os>_<arch>.tar.gz` from the configured release path. See [hosting the installer](#hosting-the-installer) below before publishing it.
@@ -39,10 +39,10 @@ The installer downloads `gpu-watchman_<os>_<arch>.tar.gz` from the configured re
 Publish these files for each release version, for example `v0.2.0`:
 
 ```text
-https://rest.yshubham.com/gpu/releases/v0.2.0/gpu-watchman_linux_amd64.tar.gz
-https://rest.yshubham.com/gpu/releases/v0.2.0/gpu-watchman_linux_amd64.tar.gz.sha256
-https://rest.yshubham.com/gpu/releases/v0.2.0/gpu-watchman_darwin_arm64.tar.gz
-https://rest.yshubham.com/gpu/releases/v0.2.0/gpu-watchman_darwin_arm64.tar.gz.sha256
+https://tools.yshubham.com/watchman/releases/v0.2.0/gpu-watchman_linux_amd64.tar.gz
+https://tools.yshubham.com/watchman/releases/v0.2.0/gpu-watchman_linux_amd64.tar.gz.sha256
+https://tools.yshubham.com/watchman/releases/v0.2.0/gpu-watchman_darwin_arm64.tar.gz
+https://tools.yshubham.com/watchman/releases/v0.2.0/gpu-watchman_darwin_arm64.tar.gz.sha256
 ```
 
 The archive must contain one executable named `gpu-watchman`. Create it with:
@@ -57,5 +57,5 @@ Set `GPU_WATCHMAN_VERSION` to select a release and `GPU_WATCHMAN_INSTALL_DIR` to
 
 ```sh
 GPU_WATCHMAN_VERSION=v0.2.0 GPU_WATCHMAN_INSTALL_DIR=$HOME/.local/bin \
-  curl -fsSL https://rest.yshubham.com/gpu/install.sh | sh
+  curl -fsSL https://tools.yshubham.com/watchman/install.sh | sh
 ```
