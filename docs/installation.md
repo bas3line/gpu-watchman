@@ -24,7 +24,7 @@ The release profile enables thin LTO, one codegen unit, symbol stripping, and ab
 ## Hosted installer
 
 ~~~sh
-gh release download v0.8.2 \
+gh release download v0.8.3 \
   --repo bas3line/gpu-watchman \
   --pattern install.sh
 gh attestation verify install.sh --repo bas3line/gpu-watchman
@@ -38,6 +38,8 @@ GPU_WATCHMAN_INSTALL_DIR="$HOME/.local/bin" sh install.sh
 ~~~
 
 The versioned installer is a release asset with a GitHub keyless attestation; verify it before execution as shown. It selects Linux/macOS and amd64/arm64, downloads a release archive, and requires its SHA-256 sidecar to verify. Override the release with **GPU_WATCHMAN_VERSION**. A missing checksum fails closed; **GPU_WATCHMAN_ALLOW_UNVERIFIED=1** exists only for a trusted private mirror.
+
+Linux release binaries are statically linked against musl so they do not inherit the GitHub build runner's glibc requirement. Release CI rejects Linux archives with a dynamic interpreter or shared-library dependency before attestation and publication.
 
 ## Release artifacts
 

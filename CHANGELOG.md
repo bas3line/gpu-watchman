@@ -2,6 +2,14 @@
 
 All notable GPU Watchman changes are recorded here. Version tags follow semantic versioning.
 
+## [0.8.3] - 2026-07-19
+
+### Fixed
+
+- Linux amd64 and arm64 release archives now contain statically linked musl binaries instead of inheriting GLIBC 2.39 from the Ubuntu 24.04 build runner. Release CI inspects every Linux binary and rejects dynamic interpreters or shared-library dependencies before signing and publication, restoring compatibility with Debian 12 and other supported Linux hosts.
+- The pinned Rust 1.88 toolchain is installed explicitly in verification and packaging jobs, removing ambiguous action inputs and keeping the declared MSRV enforceable.
+- NVIDIA command-fixture tests use a bounded five-second process deadline so parallel, resource-constrained release runners do not produce one-second scheduling flakes; production collection defaults remain unchanged.
+
 ## [0.8.2] - 2026-07-19
 
 ### Fixed
