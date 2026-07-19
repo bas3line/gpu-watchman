@@ -10,9 +10,11 @@ runs:
         components: clippy, rustfmt
     - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
     - if: runner.os == 'Linux'
-      uses: rustsec/audit-check@69366f33c96575abad1ee0dba8212993eecbe998 # v2.0.0
-      with:
-        token: ${{ github.token }}
+      shell: bash
+      run: cargo install cargo-audit --version 0.22.2 --locked
+    - if: runner.os == 'Linux'
+      shell: bash
+      run: cargo audit
     - shell: bash
       run: sh scripts/check-version.sh
     - shell: bash

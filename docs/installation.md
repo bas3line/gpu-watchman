@@ -24,7 +24,7 @@ The release profile enables thin LTO, one codegen unit, symbol stripping, and ab
 ## Hosted installer
 
 ~~~sh
-gh release download v0.8.1 \
+gh release download v0.8.2 \
   --repo bas3line/gpu-watchman \
   --pattern install.sh
 gh attestation verify install.sh --repo bas3line/gpu-watchman

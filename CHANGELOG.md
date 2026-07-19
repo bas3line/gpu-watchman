@@ -2,6 +2,12 @@
 
 All notable GPU Watchman changes are recorded here. Version tags follow semantic versioning.
 
+## [0.8.2] - 2026-07-19
+
+### Fixed
+
+- Linux release verification installs the pinned **cargo-audit 0.22.2** dependency graph with its lockfile, keeping the security gate compatible with Watchman's Rust 1.88 MSRV instead of resolving newer transitive crates that require Rust 1.89 or 1.96.
+
 ## [0.8.1] - 2026-07-19
 
 ### Fixed
