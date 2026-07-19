@@ -1,0 +1,193 @@
+name: Release
+
+on:
+  push:
+    tags: ["v[0-9]+.*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/verify
+
+  create-release:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Create or reuse a safe draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo "release tag must point to a commit on main" >&2
+            exit 1
+          }
+
+          release_state=$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft 2>/dev/null || true)
+          case "$release_state" in
+            true)
+              echo "Reusing existing draft release $GITHUB_REF_NAME"
+              ;;
+            false)
+              echo "release $GITHUB_REF_NAME is already published; refusing to replace it" >&2
+              exit 1
+              ;;
+            '')
+              release_version=${GITHUB_REF_NAME#v}
+              release_notes="$RUNNER_TEMP/gpu-watchman-release-notes.md"
+              awk -v version="$release_version" '
+                index($0, "## [" version "]") == 1 { found = 1; next }
+                found && /^## \[/ { exit }
+                found { print }
+                END { if (!found) exit 1 }
+              ' CHANGELOG.md > "$release_notes"
+              test -s "$release_notes"
+              gh release create "$GITHUB_REF_NAME" \
+                --draft \
+                --notes-file "$release_notes" \
+                --title "$GITHUB_REF_NAME" \
+                --verify-tag
+              ;;
+            *)
+              echo "unexpected release state: $release_state" >&2
+              exit 1
+              ;;
+          esac
+      - name: Attest the release installer
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4
+        with:
+          subject-path: install.sh
+      - name: Upload the attested installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" install.sh --clobber
+
+  upload:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive: gpu-watchman_linux_amd64
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive: gpu-watchman_linux_arm64
+          - target: x86_64-apple-darwin
+            os: macos-15-intel
+            archive: gpu-watchman_darwin_amd64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            archive: gpu-watchman_darwin_arm64
+    runs-on: ${{ matrix.os }}
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@39b0b3842c7e8bbf6904c0bfc3d9006fdd4dc4e0 # 1.88.0
+        with:
+          toolchain: 1.88.0
+      - uses: taiki-e/setup-cross-toolchain-action@3d9770ce98eb7dbcf378563182a5e8031165f75b # v1
+        if: startsWith(matrix.target, 'aarch64-unknown-linux')
+        with:
+          target: ${{ matrix.target }}
+          runner: none
+      - id: build
+        uses: taiki-e/upload-rust-binary-action@f0d45ae91ee7b8ee928de7a9d04d893a08bcbec6 # v1
+        with:
+          bin: gpu-watchman
+          target: ${{ matrix.target }}
+          archive: ${{ matrix.archive }}
+          locked: true
+          checksum: sha256
+          include: README.md,CHANGELOG.md,SECURITY.md,LICENSE
+          dry-run: true
+          dry-run-intended: true
+      - name: Normalize the checksum asset name
+        id: checksum
+        env:
+          RELEASE_ARCHIVE: ${{ steps.build.outputs.tar }}
+          SOURCE_CHECKSUM: ${{ steps.build.outputs.sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          checksum_path="${RELEASE_ARCHIVE}.sha256"
+          if [[ "$SOURCE_CHECKSUM" != "$checksum_path" ]]; then
+            mv -- "$SOURCE_CHECKSUM" "$checksum_path"
+          fi
+          printf 'path=%s\n' "$checksum_path" >> "$GITHUB_OUTPUT"
+      - name: Attest the release archive and checksum
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4
+        with:
+          subject-path: |
+            ${{ steps.build.outputs.tar }}
+            ${{ steps.checksum.outputs.path }}
+      - name: Upload attested release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release upload "$GITHUB_REF_NAME"
+          "${{ steps.build.outputs.tar }}"
+          "${{ steps.checksum.outputs.path }}"
+          --clobber
+
+  publish-release:
+    needs: upload
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Verify and publish the complete draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_assets="$RUNNER_TEMP/gpu-watchman-expected-assets.txt"
+          actual_assets="$RUNNER_TEMP/gpu-watchman-actual-assets.txt"
+          printf '%s\n' \
+            install.sh \
+            gpu-watchman_linux_amd64.tar.gz \
+            gpu-watchman_linux_amd64.tar.gz.sha256 \
+            gpu-watchman_linux_arm64.tar.gz \
+            gpu-watchman_linux_arm64.tar.gz.sha256 \
+            gpu-watchman_darwin_amd64.tar.gz \
+            gpu-watchman_darwin_amd64.tar.gz.sha256 \
+            gpu-watchman_darwin_arm64.tar.gz \
+            gpu-watchman_darwin_arm64.tar.gz.sha256 \
+            | sort > "$expected_assets"
+          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' \
+            | sort > "$actual_assets"
+          diff -u "$expected_assets" "$actual_assets"
+          gh release edit "$GITHUB_REF_NAME" --draft=false

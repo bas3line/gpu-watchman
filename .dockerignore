@@ -1,0 +1,10 @@
+target
+.git
+.github
+docs
+packaging
+scripts
+tests
+CHANGELOG.md
+install.sh
+rust-toolchain.toml

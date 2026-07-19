@@ -1,0 +1,80 @@
+groups:
+  - name: gpu-watchman
+    rules:
+      - alert: GPUWatchmanMissing
+        expr: up{job="gpu-watchman"} == 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: GPU Watchman is not being scraped
+      - alert: GPUWatchmanStale
+        expr: gpu_watchman_last_success_age_seconds > 120
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'GPU Watchman report is stale on {{ $labels.instance }}'
+      - alert: GPUHardwareCritical
+        expr: gpu_watchman_findings{severity="critical"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Critical GPU finding on {{ $labels.instance }}'
+      - alert: GPUTelemetrySourceUnavailable
+        expr: gpu_watchman_source_status{status!="ok"} * on(instance, source) gpu_watchman_source_required == 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Required telemetry source {{ $labels.source }} is {{ $labels.status }} on {{ $labels.instance }}'
+      - alert: GPUVRAMPressure
+        expr: 100 * gpu_watchman_vram_used_mib / gpu_watchman_vram_total_mib > 95
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'GPU {{ $labels.gpu }} VRAM pressure is above 95%'
+      - alert: GPUOverTemperature
+        expr: gpu_watchman_temperature_celsius >= 90
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'GPU {{ $labels.gpu }} is at {{ $value }}C'
+      - alert: InferenceEndpointDown
+        expr: gpu_watchman_inference_endpoint_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Inference endpoint {{ $labels.url }} is down'
+      - alert: InferenceQueueBuilding
+        expr: gpu_watchman_inference_requests_waiting > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Inference requests are queued at {{ $labels.url }}'
+      - alert: InferenceRequestErrors
+        expr: gpu_watchman_inference_request_errors_per_second > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Inference request errors are active at {{ $labels.url }}'
+      - alert: InferencePreemptions
+        expr: gpu_watchman_inference_preemptions_per_second > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Inference requests are being preempted at {{ $labels.url }}'
+      - alert: InferenceKVCachePressure
+        expr: gpu_watchman_inference_kv_cache_usage_percent >= 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Inference KV cache is critically full at {{ $labels.url }}'

@@ -2,60 +2,88 @@
 
 ## Requirements
 
-- NVIDIA GPU and working driver
-- `nvidia-smi` in `PATH`
-- Linux or macOS host
-- Go 1.25.6 only when building from source
+- Linux or macOS
+- NVIDIA GPU and working driver for live collection
+- **nvidia-smi** in PATH
+- GitHub CLI with attestation support for the verified hosted installer
+- Rust 1.88 or newer only when building from source
 
-Verify the driver before installing:
+The capacity, history, completions, and help commands work without GPU hardware.
 
-```sh
-nvidia-smi
-```
+## Build from source
 
-## Build From Source
+~~~sh
+cargo build --locked --release
+./target/release/gpu-watchman --version
+./target/release/gpu-watchman doctor
+install -m 0755 target/release/gpu-watchman /usr/local/bin/gpu-watchman
+~~~
 
-From the repository root:
+The release profile enables thin LTO, one codegen unit, symbol stripping, and abort-on-panic.
 
-```sh
-cd code
-go build -trimpath -ldflags='-s -w' -o gpu-watchman ./cmd/gpu-watchman
-install -m 0755 gpu-watchman /usr/local/bin/gpu-watchman
-gpu-watchman version
-```
+## Hosted installer
 
-## Hosted Installer
+~~~sh
+gh release download v0.8.1 \
+  --repo bas3line/gpu-watchman \
+  --pattern install.sh
+gh attestation verify install.sh --repo bas3line/gpu-watchman
+sh install.sh
+~~~
 
-When release artifacts are hosted, install with:
+Install without elevated privileges:
 
-```sh
-curl -fsSL https://tools.yshubham.com/watchman/install.sh | sh
-```
+~~~sh
+GPU_WATCHMAN_INSTALL_DIR="$HOME/.local/bin" sh install.sh
+~~~
 
-The installer downloads `gpu-watchman_<os>_<arch>.tar.gz` from the configured release path. See [hosting the installer](#hosting-the-installer) below before publishing it.
+The versioned installer is a release asset with a GitHub keyless attestation; verify it before execution as shown. It selects Linux/macOS and amd64/arm64, downloads a release archive, and requires its SHA-256 sidecar to verify. Override the release with **GPU_WATCHMAN_VERSION**. A missing checksum fails closed; **GPU_WATCHMAN_ALLOW_UNVERIFIED=1** exists only for a trusted private mirror.
 
-## Hosting The Installer
+## Release artifacts
 
-Publish these files for each release version, for example `v0.2.0`:
+Pushing a version tag triggers release builds for:
 
-```text
-https://tools.yshubham.com/watchman/releases/v0.2.0/gpu-watchman_linux_amd64.tar.gz
-https://tools.yshubham.com/watchman/releases/v0.2.0/gpu-watchman_linux_amd64.tar.gz.sha256
-https://tools.yshubham.com/watchman/releases/v0.2.0/gpu-watchman_darwin_arm64.tar.gz
-https://tools.yshubham.com/watchman/releases/v0.2.0/gpu-watchman_darwin_arm64.tar.gz.sha256
-```
+~~~text
+gpu-watchman_linux_amd64.tar.gz
+gpu-watchman_linux_arm64.tar.gz
+gpu-watchman_darwin_amd64.tar.gz
+gpu-watchman_darwin_arm64.tar.gz
+~~~
 
-The archive must contain one executable named `gpu-watchman`. Create it with:
+Every archive receives a .sha256 file. The release workflow uses a locked dependency graph.
 
-```sh
-GOOS=linux GOARCH=amd64 go build -trimpath -ldflags='-s -w' -o gpu-watchman ./code/cmd/gpu-watchman
-tar -czf gpu-watchman_linux_amd64.tar.gz gpu-watchman
-shasum -a 256 gpu-watchman_linux_amd64.tar.gz > gpu-watchman_linux_amd64.tar.gz.sha256
-```
+## Container
 
-Set `GPU_WATCHMAN_VERSION` to select a release and `GPU_WATCHMAN_INSTALL_DIR` to change the destination:
+~~~sh
+docker build -t gpu-watchman:local .
+docker run --rm --gpus all --pid host \
+  --mount type=bind,src=/secure/watchman-api-token,dst=/run/secrets/watchman-api-token,readonly \
+  --env GPU_WATCHMAN_API_TOKEN_FILE=/run/secrets/watchman-api-token \
+  -p 127.0.0.1:9400:9400 gpu-watchman:local
+~~~
 
-```sh
-GPU_WATCHMAN_VERSION=v0.2.0 GPU_WATCHMAN_INSTALL_DIR=$HOME/.local/bin \
-  curl -fsSL https://tools.yshubham.com/watchman/install.sh | sh
-```
+The final image is non-root and uses rustls with a compiled-in Web PKI root set, but does not include a GPU driver. NVIDIA Container Toolkit must inject the host driver utility and libraries. Ensure the mounted token file is owned by root or container UID 65532, is not group-writable/executable, grants no access to other users, and remains readable by UID/GID 65532. The default container command runs **serve** on **0.0.0.0:9400** with the explicit remote-listener opt-in, requires API authentication and process telemetry, and intentionally marks kernel-log Xid collection skipped. It fails closed when neither **GPU_WATCHMAN_API_TOKEN** nor **GPU_WATCHMAN_API_TOKEN_FILE** resolves to a valid token. The host port is bound to loopback above; use an authenticated TLS proxy and deliberate network policy before publishing it remotely.
+
+## systemd
+
+The example unit runs as a dedicated **gpu-watchman** account, binds the API to loopback, and writes history under **/var/lib/gpu-watchman**.
+
+~~~sh
+useradd --system --home-dir /var/lib/gpu-watchman gpu-watchman
+usermod -a -G video gpu-watchman
+install -d -m 0750 /etc/gpu-watchman
+install -m 0400 /secure/watchman-api-token /etc/gpu-watchman/api-token
+install -m 0644 packaging/systemd/gpu-watchman.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now gpu-watchman
+~~~
+
+GPU device group names vary. Confirm **sudo -u gpu-watchman nvidia-smi** before enabling the unit. The packaged service requires the root-owned API token through systemd's credential directory even though it binds to loopback, and applies kernel/control-group/namespace/capability restrictions compatible with its default **--no-xid** policy.
+
+## Shell completions
+
+~~~sh
+gpu-watchman completions bash > /etc/bash_completion.d/gpu-watchman
+gpu-watchman completions zsh > ~/.zfunc/_gpu-watchman
+gpu-watchman completions fish > ~/.config/fish/completions/gpu-watchman.fish
+~~~

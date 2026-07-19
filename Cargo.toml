@@ -1,0 +1,60 @@
+[package]
+name = "gpu-watchman"
+version = "0.8.1"
+edition = "2024"
+rust-version = "1.88"
+description = "Inference-aware GPU diagnostics, active validation, observability, and capacity planning"
+license = "Apache-2.0"
+repository = "https://github.com/bas3line/gpu-watchman"
+readme = "README.md"
+keywords = ["gpu", "inference", "nvidia", "observability", "llm"]
+categories = ["command-line-utilities", "hardware-support"]
+exclude = [".github/**", "Dockerfile", ".dockerignore"]
+
+[lib]
+name = "gpu_watchman"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gpu-watchman"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4.5", features = ["derive", "env", "wrap_help"] }
+clap_complete = "4.5"
+csv = "1.3"
+ctrlc = { version = "3.4", features = ["termination"] }
+humantime = "2.1"
+libc = "0.2"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "1.1.2"
+url = "2.5"
+uzers = "0.12"
+wait-timeout = "0.2"
+
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1.1", features = ["fs"] }
+
+[dev-dependencies]
+tempfile = "3.14"
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+opt-level = 3
+strip = "symbols"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
