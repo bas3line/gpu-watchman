@@ -35,7 +35,7 @@ spec:
         - name: watchman
           # REQUIRED: replace the all-zero fail-closed digest with the sha256
           # published for the exact v0.8.3 image before applying this manifest.
-          image: ghcr.io/bas3line/gpu-watchman:0.8.3@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          image: ghcr.io/bas3line/watchman:0.8.3@sha256:0000000000000000000000000000000000000000000000000000000000000000
           imagePullPolicy: IfNotPresent
           args:
             - serve

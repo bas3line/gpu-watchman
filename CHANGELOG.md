@@ -10,6 +10,10 @@ All notable GPU Watchman changes are recorded here. Version tags follow semantic
 - The pinned Rust 1.88 toolchain is installed explicitly in verification and packaging jobs, removing ambiguous action inputs and keeping the declared MSRV enforceable.
 - NVIDIA command-fixture tests use a bounded five-second process deadline so parallel, resource-constrained release runners do not produce one-second scheduling flakes; production collection defaults remain unchanged.
 
+### Changed
+
+- Release downloads, attestations, source metadata, documentation, and container coordinates use the canonical **bas3line/watchman** repository identity after the GitHub rename.
+
 ## [0.8.2] - 2026-07-19
 
 ### Fixed
@@ -143,8 +147,8 @@ All notable GPU Watchman changes are recorded here. Version tags follow semantic
 
 - Initial library-first Rust rewrite with NVIDIA telemetry, inference probes, health analysis, history, capacity planning, Prometheus/API serving, support bundles, deployment manifests, CI, and multi-platform releases.
 
-[0.8.0]: https://github.com/bas3line/gpu-watchman/compare/v0.7.0...v0.8.0
-[0.7.0]: https://github.com/bas3line/gpu-watchman/compare/v0.6.0...v0.7.0
-[0.6.0]: https://github.com/bas3line/gpu-watchman/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/bas3line/gpu-watchman/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/bas3line/gpu-watchman/releases/tag/v0.4.0
+[0.8.0]: https://github.com/bas3line/watchman/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/bas3line/watchman/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/bas3line/watchman/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/bas3line/watchman/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/bas3line/watchman/releases/tag/v0.4.0

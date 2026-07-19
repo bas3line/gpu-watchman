@@ -33,7 +33,7 @@ fi
   printf '%s\n' "CHANGELOG.md has no $version release heading" >&2
   exit 1
 }
-/usr/bin/grep -F "gpu-watchman:$version@sha256:" packaging/kubernetes/daemonset.yaml >/dev/null || {
+/usr/bin/grep -F "bas3line/watchman:$version@sha256:" packaging/kubernetes/daemonset.yaml >/dev/null || {
   printf '%s\n' "Kubernetes image tag does not match $version" >&2
   exit 1
 }

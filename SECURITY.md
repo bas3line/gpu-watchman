@@ -23,14 +23,14 @@ Downloaded assets can also be verified directly:
 ```sh
 sha256sum -c gpu-watchman_linux_amd64.tar.gz.sha256
 gh attestation verify gpu-watchman_linux_amd64.tar.gz \
-  --repo bas3line/gpu-watchman
+  --repo bas3line/watchman
 ```
 
 Published container manifests include BuildKit provenance and an SBOM, plus a GitHub attestation bound to the pushed manifest-list digest:
 
 ```sh
-gh attestation verify oci://ghcr.io/bas3line/gpu-watchman:0.8.0 \
-  --repo bas3line/gpu-watchman
+gh attestation verify oci://ghcr.io/bas3line/watchman:0.8.0 \
+  --repo bas3line/watchman
 ```
 
 The publication workflows gate on the shared tests and a RustSec advisory audit. Third-party actions and official container bases are pinned to immutable commits or OCI index digests; Dependabot proposes their scheduled updates for review.

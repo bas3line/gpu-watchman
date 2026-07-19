@@ -9,7 +9,7 @@ fail() {
   exit 1
 }
 
-BASE_URL=${WATCHMAN_BASE_URL:-${GPU_WATCHMAN_BASE_URL:-https://github.com/bas3line/gpu-watchman/releases/download}}
+BASE_URL=${WATCHMAN_BASE_URL:-${GPU_WATCHMAN_BASE_URL:-https://github.com/bas3line/watchman/releases/download}}
 BASE_URL=${BASE_URL%/}
 VERSION=${WATCHMAN_VERSION:-${GPU_WATCHMAN_VERSION:-v0.8.3}}
 INSTALL_DIR=${WATCHMAN_INSTALL_DIR:-${GPU_WATCHMAN_INSTALL_DIR:-/usr/local/bin}}
@@ -94,7 +94,7 @@ case "$attestation_mode" in
     if command -v gh >/dev/null 2>&1 && gh attestation verify --help >/dev/null 2>&1; then
       printf '%s\n' "Verifying GitHub artifact attestation"
       GH_FORCE_TTY=0 gh attestation verify "$tmp/$archive" \
-        --repo bas3line/gpu-watchman >/dev/null || fail "artifact attestation verification failed"
+        --repo bas3line/watchman >/dev/null || fail "artifact attestation verification failed"
     elif [ "$attestation_mode" = required ]; then
       fail "a GitHub CLI with attestation support is required"
     else
