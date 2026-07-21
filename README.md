@@ -4,6 +4,14 @@ GPU Watchman is a Rust control-room utility for operating AI inference nodes. Ha
 
 It is designed for the question inference engineers actually ask during an incident: **is the GPU healthy, who owns its memory, is the serving runtime making progress, and what should I do next?**
 
+## Links
+
+**Start here:** [product docs](https://docs.yshubham.com/v2/products/watchman) · [tools registry](https://tools.yshubham.com/)
+
+**Source:** [GitHub](https://github.com/bas3line/watchman) · [self-hosted forge mirror](https://git.yshubham.com/bas3line/watchman) · [`watchman` agent skill](https://github.com/bas3line/rool-repo/tree/main/skills/watchman)
+
+**Platform:** [yshubham.com](https://yshubham.com/) · [status](https://status.yshubham.com/) · [trace](https://trace.yshubham.com/) · [temporary objects](https://objects.yshubham.com/)
+
 ## Why I open-sourced it
 
 GPU Watchman started as a private tool I built to diagnose and operate real AI inference infrastructure. I am open-sourcing it because the same problems—unclear VRAM ownership, incomplete runtime telemetry, difficult capacity decisions, and weak rollout evidence—show up for inference engineers everywhere. My goal is to make this a practical, trustworthy utility that the community can use, audit, and improve for real production work. If it saves someone time during a GPU incident or helps them ship a safer inference deployment, it is doing its job.
@@ -218,16 +226,16 @@ Capacity output is an engineering estimate, not an allocation guarantee. Weight 
 
 ## Deploy
 
-- [Installation and releases](docs/installation.md)
-- [CLI reference](docs/reference/cli.md)
-- [Operational profile reference](docs/reference/config.md)
-- [Architecture](docs/architecture.md)
-- [Inference canary, runtime, artifact, and capacity guide](docs/features/inference.md)
-- [Report comparison and rollout gates](docs/operations/comparison.md)
-- [Active-canary rollout comparison](docs/operations/rollout.md)
-- [Saturation benchmark baseline/candidate comparison](docs/operations/benchmark-comparison.md)
-- [Report schema reference](docs/reference/report-schema.md)
-- [Prometheus/API reference](docs/exporter/README.md)
+- [Installation and releases](https://docs.yshubham.com/v2/watchman/reference#install-and-releases)
+- [CLI reference](https://docs.yshubham.com/v2/watchman/reference#cli-workflows)
+- [Operational profile reference](https://docs.yshubham.com/v2/watchman/reference#operational-profiles)
+- [Architecture and development](https://docs.yshubham.com/v2/watchman/reference#architecture-and-development)
+- [Inference canary, runtime, artifact, and capacity guide](https://docs.yshubham.com/v2/watchman/inference-and-capacity)
+- [Report comparison and rollout gates](https://docs.yshubham.com/v2/watchman/rollouts-and-deployment#compare-like-with-like)
+- [Active-canary rollout comparison](https://docs.yshubham.com/v2/watchman/rollouts-and-deployment#compare-like-with-like)
+- [Saturation benchmark baseline/candidate comparison](https://docs.yshubham.com/v2/watchman/rollouts-and-deployment#compare-like-with-like)
+- [Report schema reference](https://docs.yshubham.com/v2/watchman/reference#report-contract)
+- [Prometheus/API reference](https://docs.yshubham.com/v2/watchman/reference#prometheus-and-http-api)
 - [systemd unit](packaging/systemd/gpu-watchman.service)
 - [Kubernetes DaemonSet](packaging/kubernetes/daemonset.yaml)
 - [Prometheus alert rules](packaging/prometheus/alerts.yaml)
@@ -244,4 +252,4 @@ cargo test --locked --all-targets
 cargo build --locked --release
 ~~~
 
-The crate is organized by responsibility rather than command: stable data contracts, telemetry adapters, inference probes, analysis, operational workflows, planning, presentation, and the CLI application layer. See the [architecture guide](docs/architecture.md) and [development guide](docs/development.md) before adding a backend or rule.
+The crate is organized by responsibility rather than command: stable data contracts, telemetry adapters, inference probes, analysis, operational workflows, planning, presentation, and the CLI application layer. See the [architecture and development guide](https://docs.yshubham.com/v2/watchman/reference#architecture-and-development) before adding a backend or rule.
